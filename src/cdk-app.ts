@@ -1,14 +1,8 @@
 /* eslint-disable no-new */
 import { App, Tags } from 'aws-cdk-lib';
-import ApplicationStack from './stacks/ApplicationStack';
-import DataAccessTestStack from './stacks/DataAccessTestStack';
-import DataStorageStack from './stacks/DataStorageStack';
-import FunctionTestStack from './stacks/FunctionTestStack';
+import TaskTokenTestStack from './TaskTokenTestStack';
 
 const app = new App();
-Tags.of(app).add('app', 'HexagonalLambdaLayersApp');
+Tags.of(app).add('app', 'BlogTaskTokensApp');
 
-new DataStorageStack(app, 'DataStorageStack', {});
-new ApplicationStack(app, 'ApplicationStack', {});
-new FunctionTestStack(app, 'FunctionTestStack', {});
-new DataAccessTestStack(app, 'DataAccessTestStack', {});
+new TaskTokenTestStack(app, 'DataAccessTestStack', {});
