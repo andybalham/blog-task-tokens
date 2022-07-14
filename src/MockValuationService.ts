@@ -1,26 +1,85 @@
+/* eslint-disable no-new */
 import { Construct } from 'constructs';
 import {} from 'aws-cdk-lib/aws-apigatewayv2';
-import { HttpApi } from '@aws-cdk/aws-apigatewayv2-alpha';
-import { CfnOutput } from 'aws-cdk-lib';
+import { HttpApi, HttpMethod } from '@aws-cdk/aws-apigatewayv2-alpha';
+import { CfnOutput, Duration } from 'aws-cdk-lib';
+import {
+  LogLevel,
+  StateMachine,
+  StateMachineType,
+  WaitTime,
+} from 'aws-cdk-lib/aws-stepfunctions';
+import StateMachineBuilder from '@andybalham/state-machine-builder-v2';
+import { LogGroup } from 'aws-cdk-lib/aws-logs';
+import { HttpLambdaIntegration } from '@aws-cdk/aws-apigatewayv2-integrations-alpha';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { STATE_MACHINE_ARN } from './MockValuationService.RequestHandlerFunction';
 
 export default class MockValuationService extends Construct {
   constructor(scope: Construct, id: string) {
     super(scope, id);
 
-    // TODO 13Jul22: Define the function to make the return call
+    const responseSenderFunction = new NodejsFunction(
+      this,
+      'ResponseSenderFunction'
+    );
 
-    // TODO 13Jul22: Define the step function to call back
+    const stateMachine = new StateMachine(this, 'MockValuationStateMachine', {
+      stateMachineType: StateMachineType.EXPRESS,
+      logs: {
+        destination: new LogGroup(this, 'MockValuationStateMachineLogGroup'),
+        level: LogLevel.ALL,
+        includeExecutionData: false,
+      },
+      definition: new StateMachineBuilder()
+        .wait('Wait', {
+          time: WaitTime.duration(Duration.seconds(6)),
+        })
+        .lambdaInvoke('SendResponse', {
+          lambdaFunction: responseSenderFunction,
+        })
+        .build(this, {
+          defaultProps: {
+            lambdaInvoke: {
+              payloadResponseOnly: true,
+            },
+          },
+        }),
+    });
+
+    const requestHandlerFunction = new NodejsFunction(
+      this,
+      'RequestHandlerFunction',
+      {
+        environment: {
+          [STATE_MACHINE_ARN]: stateMachine.stateMachineArn,
+        },
+      }
+    );
+
+    stateMachine.grantStartExecution(requestHandlerFunction);
 
     const httpApi = new HttpApi(this, 'MockValuationHttpApi', {
       description: 'Mock Valuation API',
     });
 
-    // We want to change the following to output the actual route
+    httpApi.addRoutes({
+      path: '/valuation-request',
+      methods: [HttpMethod.POST],
+      integration: new HttpLambdaIntegration(
+        'ValuationRequestIntegration',
+        requestHandlerFunction
+      ),
+    });
 
-    // eslint-disable-next-line no-new
-    new CfnOutput(this, 'MockValuationHttpApiUrl', {
+    new CfnOutput(this, 'MockValuationApiBaseUrl', {
       value: httpApi.url ?? '<undefined>',
       description: 'The base URL for the Mock Valuation API',
+    });
+
+    new CfnOutput(this, 'MockValuationApiRequestPath', {
+      value: `${httpApi.url}valuation-request`,
+      description: 'Valuation Request path for the Mock Valuation API',
     });
   }
 }

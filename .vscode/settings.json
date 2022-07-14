@@ -22,5 +22,19 @@
     "TRes",
     "vars"
   ],
-  "serverlessConsole.services": []
+  "serverlessConsole.services": [
+    {
+      "type": "cloudformation",
+      "title": "Task Token",
+      "timeOffsetInMs": 0,
+      "awsProfile": "default",
+      "stacks": [
+        {
+          "region": "eu-west-2",
+          "stackName": "TaskTokenTestStack",
+          "stage": "dev"
+        }
+      ]
+    }
+  ]
 }

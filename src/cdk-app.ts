@@ -5,4 +5,4 @@ import TaskTokenTestStack from './TaskTokenTestStack';
 const app = new App();
 Tags.of(app).add('app', 'BlogTaskTokensApp');
 
-new TaskTokenTestStack(app, 'DataAccessTestStack', {});
+new TaskTokenTestStack(app, 'TaskTokenTestStack', {});
