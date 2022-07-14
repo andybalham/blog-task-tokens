@@ -18,5 +18,5 @@ export const handler = async (
 
   const response = await axios.post(event.callbackUrl, valuationResponse);
 
-  console.log(JSON.stringify({ response }, null, 2));
+  console.log(JSON.stringify({ 'response.status': response.status }, null, 2));
 };

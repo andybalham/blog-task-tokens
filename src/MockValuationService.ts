@@ -2,7 +2,7 @@
 import { Construct } from 'constructs';
 import {} from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpApi, HttpMethod } from '@aws-cdk/aws-apigatewayv2-alpha';
-import { CfnOutput, Duration } from 'aws-cdk-lib';
+import { CfnOutput, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import {
   LogLevel,
   StateMachine,
@@ -10,7 +10,7 @@ import {
   WaitTime,
 } from 'aws-cdk-lib/aws-stepfunctions';
 import StateMachineBuilder from '@andybalham/state-machine-builder-v2';
-import { LogGroup } from 'aws-cdk-lib/aws-logs';
+import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { HttpLambdaIntegration } from '@aws-cdk/aws-apigatewayv2-integrations-alpha';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { STATE_MACHINE_ARN } from './MockValuationService.RequestHandlerFunction';
@@ -27,8 +27,12 @@ export default class MockValuationService extends Construct {
     const stateMachine = new StateMachine(this, 'MockValuationStateMachine', {
       stateMachineType: StateMachineType.EXPRESS,
       logs: {
-        destination: new LogGroup(this, 'MockValuationStateMachineLogGroup'),
+        destination: new LogGroup(this, 'MockValuationStateMachineLogGroup', {
+          removalPolicy: RemovalPolicy.DESTROY,
+          retention: RetentionDays.ONE_DAY,
+        }),
         level: LogLevel.ALL,
+
         includeExecutionData: false,
       },
       definition: new StateMachineBuilder()
