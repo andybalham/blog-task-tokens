@@ -5,3 +5,7 @@ export interface ValuationRequest {
   };
   callbackUrl: string;
 }
+
+export interface ValuationRequestResponse {
+  valuationReference: string;
+}

@@ -16,6 +16,9 @@ import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { STATE_MACHINE_ARN } from './MockValuationService.RequestHandlerFunction';
 
 export default class MockValuationService extends Construct {
+
+  readonly serviceUrl: string;
+
   constructor(scope: Construct, id: string) {
     super(scope, id);
 
@@ -81,8 +84,10 @@ export default class MockValuationService extends Construct {
       description: 'The base URL for the Mock Valuation API',
     });
 
+    this.serviceUrl = `${httpApi.url}valuation-request`;
+
     new CfnOutput(this, 'MockValuationApiRequestPath', {
-      value: `${httpApi.url}valuation-request`,
+      value: this.serviceUrl,
       description: 'Valuation Request path for the Mock Valuation API',
     });
   }

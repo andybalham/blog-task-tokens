@@ -7,7 +7,7 @@ import StepFunctions, {
   StartExecutionInput,
 } from 'aws-sdk/clients/stepfunctions';
 import { nanoid } from 'nanoid';
-import { ValuationRequest } from './ValuationRequest';
+import { ValuationRequest, ValuationRequestResponse } from './ValuationRequest';
 import { ValuationStateMachineData } from './ValuationStateMachineData';
 
 export const STATE_MACHINE_ARN = 'STATE_MACHINE_ARN';
@@ -36,9 +36,13 @@ export const handler = async (event: APIGatewayEvent): Promise<any> => {
 
   await stepFunctions.startExecution(params).promise();
 
+  const valuationRequestResponse: ValuationRequestResponse = {
+    valuationReference,
+  };
+
   return {
     statusCode: 201,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ valuationReference }),
+    body: JSON.stringify(valuationRequestResponse),
   };
 };
