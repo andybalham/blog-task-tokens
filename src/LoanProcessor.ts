@@ -4,7 +4,12 @@ import { HttpLambdaIntegration } from '@aws-cdk/aws-apigatewayv2-integrations-al
 import { RemovalPolicy } from 'aws-cdk-lib';
 import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
-import { IStateMachine, StateMachine } from 'aws-cdk-lib/aws-stepfunctions';
+import {
+  IntegrationPattern,
+  IStateMachine,
+  JsonPath,
+  StateMachine,
+} from 'aws-cdk-lib/aws-stepfunctions';
 import { Construct } from 'constructs';
 import { ValuationCallbackFunctionEnv } from './LoanProcessor.ValuationCallbackFunction';
 import { ValuationRequestFunctionEnv } from './LoanProcessor.ValuationRequestFunction';
@@ -50,11 +55,16 @@ export default class LoanProcessor extends Construct {
       definition: new StateMachineBuilder()
         .lambdaInvoke('RequestValuation', {
           lambdaFunction: valuationRequestFunction,
+          integrationPattern: IntegrationPattern.WAIT_FOR_TASK_TOKEN,
+          parameters: {
+            taskToken: JsonPath.taskToken,
+            'loanApplication.$': '$',
+          },
         })
         .build(this, {
           defaultProps: {
             lambdaInvoke: {
-              payloadResponseOnly: true,
+              // payloadResponseOnly: true,
             },
           },
         }),
@@ -70,6 +80,8 @@ export default class LoanProcessor extends Construct {
         },
       }
     );
+
+    this.stateMachine.grantTaskResponse(valuationCallbackFunction);
 
     taskTokenTable.grantReadData(valuationCallbackFunction);
 

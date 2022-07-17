@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
 import axios from 'axios';
-import { nanoid } from 'nanoid';
 import { LoanApplication } from './LoanApplication';
 import TaskTokenStore from './TaskTokenStore';
 import {
@@ -27,12 +26,14 @@ const taskTokenStore = new TaskTokenStore(
   process.env[ValuationRequestFunctionEnv.TASK_TOKEN_TABLE_NAME]
 );
 
-export const handler = async (event: LoanApplication): Promise<void> => {
+export const handler = async (event: {
+  taskToken: string;
+  loanApplication: LoanApplication;
+}): Promise<void> => {
   console.log(JSON.stringify({ event }, null, 2));
-  console.log(JSON.stringify({ valuationServiceUrl }, null, 2));
 
   const valuationRequest: ValuationRequest = {
-    property: event.property,
+    property: event.loanApplication.property,
     callbackUrl,
   };
 
@@ -48,6 +49,6 @@ export const handler = async (event: LoanApplication): Promise<void> => {
 
   await taskTokenStore.putAsync({
     keyReference: valuationRequestResponse.valuationReference,
-    taskToken: `TODO-taskToken-${nanoid()}`,
+    taskToken: event.taskToken,
   });
 };
