@@ -2,7 +2,11 @@ import {
   IntegrationTestClient,
   StepFunctionsTestClient,
 } from '@andybalham/cdk-cloud-test-kit';
+import { nanoid } from 'nanoid';
+import { LoanApplication } from 'src/LoanApplication';
 import TaskTokenTestStack from '../src/TaskTokenTestStack';
+
+jest.setTimeout(30 * 1000);
 
 describe('TaskTokenTestStack Test Suite', () => {
   //
@@ -27,9 +31,17 @@ describe('TaskTokenTestStack Test Suite', () => {
   it('tests', async () => {
     // Arrange
 
+    const loanApplication: LoanApplication = {
+      applicationReference: `app-${nanoid()}`,
+      property: {
+        nameOrNumber: '999',
+        postcode: 'PO1 1CE',
+      },
+    };
+
     // Act
 
-    await loanProcessorStateMachine.startExecutionAsync({});
+    await loanProcessorStateMachine.startExecutionAsync(loanApplication);
 
     // Await
 
