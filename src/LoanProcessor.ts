@@ -1,15 +1,17 @@
-import StateMachineBuilder from '@andybalham/state-machine-builder-v2';
 import { HttpApi, HttpMethod } from '@aws-cdk/aws-apigatewayv2-alpha';
 import { HttpLambdaIntegration } from '@aws-cdk/aws-apigatewayv2-integrations-alpha';
 import { RemovalPolicy } from 'aws-cdk-lib';
 import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import {
+  Chain,
   IntegrationPattern,
   IStateMachine,
   JsonPath,
   StateMachine,
+  TaskInput,
 } from 'aws-cdk-lib/aws-stepfunctions';
+import { LambdaInvoke } from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { Construct } from 'constructs';
 import { ValuationCallbackFunctionEnv } from './LoanProcessor.ValuationCallbackFunction';
 import { ValuationRequestFunctionEnv } from './LoanProcessor.ValuationRequestFunction';
@@ -51,23 +53,18 @@ export default class LoanProcessor extends Construct {
 
     taskTokenTable.grantWriteData(valuationRequestFunction);
 
+    const requestValuationTask = new LambdaInvoke(this, 'RequestValuation', {
+      lambdaFunction: valuationRequestFunction,
+      integrationPattern: IntegrationPattern.WAIT_FOR_TASK_TOKEN,
+      payload: TaskInput.fromObject({
+        taskToken: JsonPath.taskToken,
+        'loanApplication.$': '$',
+      }),
+      // payloadResponseOnly: true,
+    });
+
     this.stateMachine = new StateMachine(this, 'LoanProcessorStateMachine', {
-      definition: new StateMachineBuilder()
-        .lambdaInvoke('RequestValuation', {
-          lambdaFunction: valuationRequestFunction,
-          integrationPattern: IntegrationPattern.WAIT_FOR_TASK_TOKEN,
-          parameters: {
-            taskToken: JsonPath.taskToken,
-            'loanApplication.$': '$',
-          },
-        })
-        .build(this, {
-          defaultProps: {
-            lambdaInvoke: {
-              // payloadResponseOnly: true,
-            },
-          },
-        }),
+      definition: Chain.start(requestValuationTask),
     });
 
     const valuationCallbackFunction = new NodejsFunction(
