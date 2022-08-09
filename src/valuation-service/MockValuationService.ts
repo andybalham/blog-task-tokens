@@ -16,7 +16,6 @@ import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { STATE_MACHINE_ARN } from './MockValuationService.RequestHandlerFunction';
 
 export default class MockValuationService extends Construct {
-
   readonly serviceUrl: string;
 
   constructor(scope: Construct, id: string) {
@@ -24,7 +23,8 @@ export default class MockValuationService extends Construct {
 
     const responseSenderFunction = new NodejsFunction(
       this,
-      'ResponseSenderFunction'
+      'ResponseSenderFunction',
+      { logRetention: RetentionDays.ONE_DAY }
     );
 
     const stateMachine = new StateMachine(this, 'MockValuationStateMachine', {
@@ -58,6 +58,7 @@ export default class MockValuationService extends Construct {
       this,
       'RequestHandlerFunction',
       {
+        logRetention: RetentionDays.ONE_DAY,
         environment: {
           [STATE_MACHINE_ARN]: stateMachine.stateMachineArn,
         },

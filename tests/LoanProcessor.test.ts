@@ -52,5 +52,9 @@ describe('TaskTokenTestStack Test Suite', () => {
     // Assert
 
     expect(timedOut).toEqual(false);
+
+    const status = await loanProcessorStateMachine.getStatusAsync();
+
+    expect(status).toEqual('SUCCEEDED');
   });
 });

@@ -3,6 +3,7 @@ import { HttpLambdaIntegration } from '@aws-cdk/aws-apigatewayv2-integrations-al
 import { RemovalPolicy } from 'aws-cdk-lib';
 import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import {
   Chain,
   IntegrationPattern,
@@ -42,6 +43,7 @@ export default class LoanProcessor extends Construct {
       this,
       'ValuationRequestFunction',
       {
+        logRetention: RetentionDays.ONE_DAY,
         environment: {
           [ValuationRequestFunctionEnv.SERVICE_URL]: props.valuationServiceUrl,
           [ValuationRequestFunctionEnv.CALLBACK_URL]: `${valuationCallbackApi.url}${VALUATION_CALLBACK_PATH}`,
@@ -58,9 +60,11 @@ export default class LoanProcessor extends Construct {
       integrationPattern: IntegrationPattern.WAIT_FOR_TASK_TOKEN,
       payload: TaskInput.fromObject({
         taskToken: JsonPath.taskToken,
+        // NOT 'taskToken.$': JsonPath.taskToken,
+        // NOT 'taskToken.$': '$$.Task.Token',
         'loanApplication.$': '$',
       }),
-      // payloadResponseOnly: true,
+      // NOT payloadResponseOnly: true,
     });
 
     this.stateMachine = new StateMachine(this, 'LoanProcessorStateMachine', {
@@ -71,6 +75,7 @@ export default class LoanProcessor extends Construct {
       this,
       'ValuationCallbackFunction',
       {
+        logRetention: RetentionDays.ONE_DAY,
         environment: {
           [ValuationCallbackFunctionEnv.TASK_TOKEN_TABLE_NAME]:
             taskTokenTable.tableName,

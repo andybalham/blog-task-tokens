@@ -8,7 +8,6 @@
     "lint": "eslint ./src --ext .ts",
     "lint-and-fix": "eslint ./src --ext .ts --fix",
     "build": "npm run lint && tsc",
-    "test-domain": "jest tests/domain-handlers --testPathIgnorePatterns=dist",
     "cdk-synth": "cdk synth TaskTokenTestStack > .cdk-synth.yml",
     "cdk-deploy": "cdk deploy TaskTokenTestStack --hotswap",
     "cdk-destroy": "cdk destroy --all"
